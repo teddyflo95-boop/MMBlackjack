@@ -3,397 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMBlackjack</title>
+    <title>MMBlackjack Live</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #1a202c;
-            user-select: none;
-        }
-        .font-poppins {
-            font-family: 'Poppins', sans-serif;
-        }
-        .game-table {
-            background-color: #2d4f3c;
-            background-image: radial-gradient(circle at center, #38664c 50%, #2d4f3c 100%);
-            border: 10px solid #5d4037;
-        }
-        .card {
-            width: 100px;
-            height: 145px;
-            background-size: cover;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: transform 0.3s ease, margin 0.3s ease;
-        }
-        .card:not(:first-child) {
-            margin-left: -50px;
-        }
-        .card-container:hover .card {
-            transform: translateY(-10px);
-        }
-        .card-container:hover .card:not(:first-child) {
-            margin-left: -40px;
-        }
-        .btn-action {
-            transition: all 0.2s ease;
-        }
-        .btn-action:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .btn-action:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-        }
-        #message-box {
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
+        body { font-family: 'Roboto', sans-serif; background-color: #1a202c; user-select: none; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+        .game-table { background-color: #2d4f3c; background-image: radial-gradient(circle at center, #38664c 50%, #2d4f3c 100%); border: 10px solid #5d4037; }
+        .card { width: 80px; height: 116px; background-size: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.3s ease, margin 0.3s ease; }
+        .card:not(:first-child) { margin-left: -40px; }
+        .btn-action { transition: all 0.2s ease; }
+        .btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-action:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+        .modal { transition: opacity 0.3s ease, transform 0.3s ease; }
+        .player-seat { transition: all 0.3s ease; }
+        .current-player { box-shadow: 0 0 20px 5px #fbbF24; transform: scale(1.05); }
     </style>
 </head>
 <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-6xl mx-auto">
+    <div class="w-full max-w-7xl mx-auto">
         <div class="game-table w-full aspect-[16/9] rounded-3xl p-6 flex flex-col relative overflow-hidden">
             
-            <!-- Header -->
-            <div class="flex justify-between items-start mb-4">
-                <h1 class="font-poppins text-3xl font-bold text-yellow-300 shadow-lg">MMBlackjack</h1>
-                <div class="text-right">
-                    <p class="font-poppins text-xl">Coins: <span id="player-coins">1000</span></p>
-                    <p class="text-yellow-200">Pot: <span id="game-pot">0</span></p>
-                </div>
-            </div>
-
-            <!-- Dealer Area -->
-            <div id="dealer-area" class="flex-grow flex flex-col items-center justify-center space-y-3">
+            <div id="dealer-area" class="h-1/3 flex flex-col items-center justify-center space-y-2">
                 <div class="text-center">
                     <h2 class="font-poppins text-2xl font-semibold opacity-80">Dealer</h2>
-                    <p class="text-xl font-bold h-8" id="dealer-score"></p>
+                    <p class="text-xl font-bold h-7" id="dealer-score"></p>
                 </div>
-                <div id="dealer-cards" class="flex card-container"></div>
+                <div id="dealer-cards" class="flex"></div>
             </div>
 
-            <!-- Player Area -->
-            <div id="player-area" class="flex-grow flex flex-col items-center justify-center space-y-3">
-                 <div id="player-cards" class="flex card-container"></div>
+            <div id="players-container" class="h-1/3 flex justify-center items-center gap-4">
+                <!-- Player seats will be injected here -->
+            </div>
+
+            <div id="main-player-area" class="h-1/3 flex flex-col items-center justify-center space-y-2">
+                 <div id="main-player-cards" class="flex"></div>
                  <div class="text-center">
-                    <p class="text-xl font-bold h-8" id="player-score"></p>
-                    <h2 class="font-poppins text-2xl font-semibold" id="player-name">Spieler</h2>
+                    <p class="text-xl font-bold h-7" id="main-player-score"></p>
+                    <h2 class="font-poppins text-2xl font-semibold" id="main-player-name">Du</h2>
                 </div>
             </div>
 
-            <!-- Controls -->
-            <div id="controls" class="h-20 flex items-center justify-center space-x-2 sm:space-x-4">
-                <!-- Betting Controls -->
-                <div id="betting-controls" class="flex items-center space-x-2">
-                    <input type="number" id="bet-amount" class="bg-gray-800 text-white w-24 sm:w-32 text-center rounded-lg p-2 border-2 border-gray-600 focus:border-yellow-400 focus:outline-none" value="100" min="1">
-                    <button id="deal-button" class="btn-action bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 sm:px-6 rounded-lg shadow-lg">Einsatz & Geben</button>
-                </div>
-                <!-- Action Controls -->
-                <div id="action-controls" class="hidden space-x-2 sm:space-x-4">
-                    <button id="hit-button" class="btn-action bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 sm:px-6 rounded-lg shadow-lg">Hit</button>
-                    <button id="stand-button" class="btn-action bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 sm:px-6 rounded-lg shadow-lg">Stand</button>
-                    <button id="double-button" class="btn-action bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 sm:px-6 rounded-lg shadow-lg">Double</button>
-                </div>
+            <div id="controls" class="absolute bottom-4 left-1/2 -translate-x-1/2 h-20 flex items-center justify-center space-x-4">
+                <!-- Controls will be shown here -->
             </div>
-            
-            <!-- Message Box -->
-            <div id="message-box" class="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center opacity-0 pointer-events-none transform scale-95">
-                <div class="text-center p-8 rounded-xl bg-gray-800 shadow-2xl">
+
+            <div id="modal-overlay" class="modal absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center opacity-0 pointer-events-none transform scale-95">
+                <div id="name-modal" class="text-center p-8 rounded-xl bg-gray-800 shadow-2xl">
+                    <h3 class="font-poppins text-3xl font-bold mb-4">Willkommen!</h3>
+                    <p class="text-lg mb-6">Bitte gib deinen Namen ein, um beizutreten.</p>
+                    <input type="text" id="name-input" class="bg-gray-700 text-white w-full text-center rounded-lg p-2 border-2 border-gray-600 focus:border-yellow-400 focus:outline-none mb-4" placeholder="Dein Name">
+                    <button id="join-button" class="btn-action bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg text-xl">Beitreten</button>
+                </div>
+                <div id="message-modal" class="hidden text-center p-8 rounded-xl bg-gray-800 shadow-2xl">
                     <h3 id="message-title" class="font-poppins text-4xl font-bold mb-4"></h3>
                     <p id="message-text" class="text-lg mb-6"></p>
-                    <button id="new-game-button" class="btn-action bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg text-xl">Neues Spiel</button>
+                    <button id="new-game-button" class="btn-action bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg text-xl">Nächste Runde</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
     <script>
+        // --- DEIN FIREBASE CONFIG HIER EINFÜGEN ---
+        const firebaseConfig = {
+    apiKey: "AIzaSyC5YvqRYdF9-Aof3vCpzcB6kqZjaIBx7WM",
+    authDomain: "mmblackjack-live.firebaseapp.com",
+    projectId: "mmblackjack-live",
+    storageBucket: "mmblackjack-live.firebasestorage.app",
+    messagingSenderId: "1006191817858",
+    appId: "1:1006191817858:web:24be3c2e896bb5b3ab309b"
+        };
+        // -----------------------------------------
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         // --- DOM Elements ---
-        const dealButton = document.getElementById('deal-button');
-        const hitButton = document.getElementById('hit-button');
-        const standButton = document.getElementById('stand-button');
-        const doubleButton = document.getElementById('double-button');
+        const controlsEl = document.getElementById('controls');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const nameModal = document.getElementById('name-modal');
+        const messageModal = document.getElementById('message-modal');
+        const nameInput = document.getElementById('name-input');
+        const joinButton = document.getElementById('join-button');
         const newGameButton = document.getElementById('new-game-button');
-
-        const dealerCardsEl = document.getElementById('dealer-cards');
-        const playerCardsEl = document.getElementById('player-cards');
-        const dealerScoreEl = document.getElementById('dealer-score');
-        const playerScoreEl = document.getElementById('player-score');
-        const playerCoinsEl = document.getElementById('player-coins');
-        const gamePotEl = document.getElementById('game-pot');
-        const betAmountInput = document.getElementById('bet-amount');
-
-        const bettingControls = document.getElementById('betting-controls');
-        const actionControls = document.getElementById('action-controls');
         
-        const messageBox = document.getElementById('message-box');
-        const messageTitle = document.getElementById('message-title');
-        const messageText = document.getElementById('message-text');
+        // --- Game State ---
+        let gameId = null;
+        let playerId = null;
+        let gameUnsubscribe = null;
 
-        // --- Game State & Logic ---
-        let player = {
-            hand: [],
-            score: 0,
-            coins: 1000,
-            wins: 0
-        };
-        let dealer = {
-            hand: [],
-            score: 0
-        };
-        let deck = [];
-        let currentBet = 0;
-        let isGameOver = false;
-
-        // --- Data Persistence ---
-        function loadPlayerData() {
-            const data = localStorage.getItem('mmBlackjackData');
-            if (data) {
-                const parsedData = JSON.parse(data);
-                player.coins = parsedData.coins || 1000;
-                player.wins = parsedData.wins || 0;
-            }
-            updateUI();
+        // --- Core Functions ---
+        function getGameIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('game');
         }
 
-        function savePlayerData() {
-            localStorage.setItem('mmBlackjackData', JSON.stringify({
-                coins: player.coins,
-                wins: player.wins
-            }));
+        function showModal(type, title = '', text = '') {
+            nameModal.classList.toggle('hidden', type !== 'name');
+            messageModal.classList.toggle('hidden', type !== 'message');
+            
+            if (type === 'message') {
+                document.getElementById('message-title').textContent = title;
+                document.getElementById('message-text').textContent = text;
+            }
+
+            modalOverlay.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+            modalOverlay.classList.add('opacity-100', 'scale-100');
         }
 
-        // --- Game Logic Functions ---
-        function createDeck() {
-            const suits = ['H', 'D', 'C', 'S']; // Hearts, Diamonds, Clubs, Spades
-            const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
-            deck = [];
-            for (const suit of suits) {
-                for (const rank of ranks) {
-                    deck.push({ rank, suit });
-                }
-            }
-            // Shuffle deck
-            for (let i = deck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]];
+        function hideModal() {
+            modalOverlay.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+            modalOverlay.classList.remove('opacity-100', 'scale-100');
+        }
+
+        function renderGame(gameData) {
+            if (!gameData || !playerId) return;
+
+            const me = gameData.players[playerId];
+            if (!me) return; // Not in game yet
+
+            // Render Dealer
+            document.getElementById('dealer-score').textContent = `Wert: ${gameData.dealer.score}`;
+            const dealerCardsEl = document.getElementById('dealer-cards');
+            dealerCardsEl.innerHTML = '';
+            gameData.dealer.hand.forEach((card, index) => {
+                const isHidden = gameData.status === 'playing' && index === 1;
+                dealerCardsEl.innerHTML += `<div class="card" style="background-image: url(${getCardImageUrl(card, isHidden)})"></div>`;
+            });
+
+            // Render other players
+            const playersContainer = document.getElementById('players-container');
+            playersContainer.innerHTML = '';
+            Object.keys(gameData.players).forEach(pId => {
+                if (pId === playerId) return;
+                const player = gameData.players[pId];
+                const playerSeat = `
+                    <div class="player-seat text-center p-2 rounded-lg ${gameData.currentPlayerId === pId ? 'current-player' : ''}">
+                        <div class="flex justify-center">
+                            ${player.hand.map(c => `<div class="card" style="background-image: url(${getCardImageUrl(c)})"></div>`).join('')}
+                        </div>
+                        <p class="text-md font-bold">${player.score || ''}</p>
+                        <h3 class="font-poppins font-semibold">${player.name}</h3>
+                        <p class="text-sm text-yellow-300">Einsatz: ${player.bet}</p>
+                    </div>
+                `;
+                playersContainer.innerHTML += playerSeat;
+            });
+
+            // Render main player
+            document.getElementById('main-player-name').textContent = me.name;
+            document.getElementById('main-player-score').textContent = `Wert: ${me.score}`;
+            const mainPlayerCardsEl = document.getElementById('main-player-cards');
+            mainPlayerCardsEl.innerHTML = '';
+            me.hand.forEach(card => {
+                mainPlayerCardsEl.innerHTML += `<div class="card" style="background-image: url(${getCardImageUrl(card)})"></div>`;
+            });
+
+            // Render Controls
+            renderControls(gameData, me);
+            
+            // Handle game over message
+            if (gameData.status === 'finished' && !messageModal.classList.contains('hidden')) {
+                // Already showing, don't re-show
+            } else if (gameData.status === 'finished') {
+                showModal('message', gameData.result.title, gameData.result.text);
             }
         }
 
-        function getCardValue(card) {
-            if (['J', 'Q', 'K', 'T'].includes(card.rank)) return 10;
-            if (card.rank === 'A') return 11;
-            return parseInt(card.rank);
+        function renderControls(gameData, me) {
+            controlsEl.innerHTML = '';
+            const isMyTurn = gameData.currentPlayerId === playerId;
+
+            if (gameData.status === 'betting') {
+                controlsEl.innerHTML = `
+                    <input type="number" id="bet-amount" class="bg-gray-800 text-white w-32 text-center rounded-lg p-2 border-2 border-gray-600" value="100" min="1">
+                    <button id="bet-button" class="btn-action bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg">Setzen</button>
+                `;
+                document.getElementById('bet-button').addEventListener('click', placeBet);
+            } else if (gameData.status === 'playing' && isMyTurn) {
+                const canDouble = me.hand.length === 2;
+                controlsEl.innerHTML = `
+                    <button id="hit-button" class="btn-action bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg">Hit</button>
+                    <button id="stand-button" class="btn-action bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg">Stand</button>
+                    <button id="double-button" class="btn-action bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg" ${!canDouble ? 'disabled' : ''}>Double</button>
+                `;
+                document.getElementById('hit-button').addEventListener('click', () => sendAction('hit'));
+                document.getElementById('stand-button').addEventListener('click', () => sendAction('stand'));
+                document.getElementById('double-button').addEventListener('click', () => sendAction('double'));
+            }
+        }
+        
+        async function placeBet() {
+            const amount = parseInt(document.getElementById('bet-amount').value);
+            if (isNaN(amount) || amount <= 0) return;
+            await db.collection('games').doc(gameId).update({
+                [`players.${playerId}.bet`]: amount,
+                [`players.${playerId}.status`]: 'ready'
+            });
         }
 
-        function calculateScore(hand) {
-            let score = hand.reduce((sum, card) => sum + getCardValue(card), 0);
-            let numAces = hand.filter(card => card.rank === 'A').length;
-            while (score > 21 && numAces > 0) {
-                score -= 10;
-                numAces--;
-            }
-            return score;
+        async function sendAction(action) {
+            await db.collection('games').doc(gameId).update({
+                lastAction: { playerId, action, timestamp: new Date() }
+            });
         }
         
         function getCardImageUrl(card, isHidden = false) {
-            if (isHidden) {
-                // Using a generic card back image
-                return 'https://deckofcardsapi.com/static/img/back.png';
-            }
-            // The Deck of Cards API uses '0' for 10, not 'T'.
+            if (isHidden) return 'https://deckofcardsapi.com/static/img/back.png';
             const rank = card.rank === 'T' ? '0' : card.rank;
             return `https://deckofcardsapi.com/static/img/${rank}${card.suit}.png`;
         }
 
-        // --- UI Functions ---
-        function updateUI() {
-            playerCoinsEl.textContent = player.coins;
-            gamePotEl.textContent = currentBet;
+        async function joinGame() {
+            const name = nameInput.value.trim();
+            if (!name) return;
 
-            // Render Player Cards
-            playerCardsEl.innerHTML = '';
-            player.hand.forEach(card => {
-                const cardEl = document.createElement('div');
-                cardEl.className = 'card';
-                cardEl.style.backgroundImage = `url(${getCardImageUrl(card)})`;
-                playerCardsEl.appendChild(cardEl);
-            });
+            playerId = localStorage.getItem('blackjackPlayerId') || `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            localStorage.setItem('blackjackPlayerId', playerId);
 
-            // Render Dealer Cards
-            dealerCardsEl.innerHTML = '';
-            dealer.hand.forEach((card, index) => {
-                const isHidden = !isGameOver && index === 1;
-                const cardEl = document.createElement('div');
-                cardEl.className = 'card';
-                cardEl.style.backgroundImage = `url(${getCardImageUrl(card, isHidden)})`;
-                dealerCardsEl.appendChild(cardEl);
-            });
+            try {
+                await db.collection('games').doc(gameId).update({
+                    [`players.${playerId}`]: {
+                        name: name,
+                        hand: [],
+                        score: 0,
+                        bet: 0,
+                        status: 'joining'
+                    }
+                });
+                hideModal();
+            } catch (error) {
+                console.error("Error joining game: ", error);
+                alert("Konnte dem Spiel nicht beitreten. Ist der Link korrekt?");
+            }
+        }
 
-            // Update Scores
-            player.score = calculateScore(player.hand);
-            playerScoreEl.textContent = player.hand.length > 0 ? `Wert: ${player.score}` : '';
+        window.onload = () => {
+            gameId = getGameIdFromUrl();
+            if (!gameId) {
+                document.body.innerHTML = '<h1 class="text-3xl text-center">Keine Spiel-ID gefunden. Bitte benutze den Link aus Discord.</h1>';
+                return;
+            }
 
-            if (dealer.hand.length > 0) {
-                if (!isGameOver) {
-                    dealerScoreEl.textContent = `Wert: ${getCardValue(dealer.hand[0])}`;
+            playerId = localStorage.getItem('blackjackPlayerId');
+            
+            gameUnsubscribe = db.collection('games').doc(gameId).onSnapshot(doc => {
+                if (doc.exists) {
+                    const gameData = doc.data();
+                    if (!playerId || !gameData.players[playerId]) {
+                        showModal('name');
+                    } else {
+                        hideModal();
+                    }
+                    renderGame(gameData);
                 } else {
-                    dealer.score = calculateScore(dealer.hand);
-                    dealerScoreEl.textContent = `Wert: ${dealer.score}`;
+                    alert("Spiel nicht gefunden. Es wurde möglicherweise beendet.");
                 }
-            } else {
-                dealerScoreEl.textContent = '';
-            }
-
-            // Update Controls
-            bettingControls.classList.toggle('hidden', isGameOver || player.hand.length > 0);
-            actionControls.classList.toggle('hidden', isGameOver || player.hand.length === 0);
-            doubleButton.disabled = player.hand.length !== 2 || player.coins < currentBet;
-        }
-        
-        function showMessage(title, text) {
-            messageTitle.textContent = title;
-            messageText.textContent = text;
-            messageBox.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
-            messageBox.classList.add('opacity-100', 'scale-100');
-        }
-
-        function hideMessage() {
-            messageBox.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
-            messageBox.classList.remove('opacity-100', 'scale-100');
-        }
-
-        // --- Game Flow Functions ---
-        function startGame() {
-            const betAmount = parseInt(betAmountInput.value);
-            if (isNaN(betAmount) || betAmount <= 0) {
-                alert("Bitte gib einen gültigen Einsatz ein.");
-                return;
-            }
-            if (betAmount > player.coins) {
-                alert("Du hast nicht genug Coins!");
-                return;
-            }
-
-            isGameOver = false;
-            currentBet = betAmount;
-            player.coins -= currentBet;
-            savePlayerData();
-
-            createDeck();
-            player.hand = [deck.pop(), deck.pop()];
-            dealer.hand = [deck.pop(), deck.pop()];
+            });
             
-            updateUI();
-            
-            player.score = calculateScore(player.hand);
-            if (player.score === 21) {
-                stand();
-            }
-        }
-
-        function hit() {
-            player.hand.push(deck.pop());
-            updateUI();
-            if (player.score > 21) {
-                endGame(false, "Bust! Der Dealer gewinnt.");
-            }
-        }
-
-        function stand() {
-            isGameOver = true;
-            dealerTurn();
-        }
-
-        function doubleDown() {
-            if (player.coins < currentBet) {
-                alert("Nicht genug Coins zum Verdoppeln!");
-                return;
-            }
-            player.coins -= currentBet;
-            currentBet *= 2;
-            savePlayerData();
-            
-            player.hand.push(deck.pop());
-            updateUI();
-
-            if (player.score > 21) {
-                endGame(false, "Bust! Der Dealer gewinnt.");
-            } else {
-                stand();
-            }
-        }
-
-        function dealerTurn() {
-            dealer.score = calculateScore(dealer.hand);
-            updateUI();
-
-            const playDealerHand = () => {
-                if (dealer.score < 17) {
-                    dealer.hand.push(deck.pop());
-                    dealer.score = calculateScore(dealer.hand);
-                    updateUI();
-                    setTimeout(playDealerHand, 800);
-                } else {
-                    determineWinner();
-                }
-            };
-            setTimeout(playDealerHand, 800);
-        }
-
-        function determineWinner() {
-            if (dealer.score > 21 || player.score > dealer.score) {
-                endGame(true, "Du gewinnst!");
-            } else if (player.score < dealer.score) {
-                endGame(false, "Der Dealer gewinnt.");
-            } else {
-                endGame(null, "Unentschieden!"); // null for push
-            }
-        }
-
-        function endGame(playerWon, title) {
-            isGameOver = true;
-            let text = '';
-            if (playerWon === true) { // Player won
-                player.coins += currentBet * 2;
-                player.wins++;
-                text = `Du gewinnst ${currentBet * 2} Coins!`;
-            } else if (playerWon === null) { // Push
-                player.coins += currentBet;
-                text = `Du erhältst deinen Einsatz von ${currentBet} Coins zurück.`;
-            } else { // Player lost
-                text = `Du verlierst deinen Einsatz von ${currentBet} Coins.`;
-            }
-            savePlayerData();
-            updateUI();
-            showMessage(title, text);
-        }
-
-        function resetGame() {
-            player.hand = [];
-            dealer.hand = [];
-            currentBet = 0;
-            isGameOver = false;
-            hideMessage();
-            updateUI();
-        }
-
-        // --- Event Listeners ---
-        dealButton.addEventListener('click', startGame);
-        hitButton.addEventListener('click', hit);
-        standButton.addEventListener('click', stand);
-        doubleButton.addEventListener('click', doubleDown);
-        newGameButton.addEventListener('click', resetGame);
-
-        // --- Initial Load ---
-        window.addEventListener('load', loadPlayerData);
-
+            joinButton.addEventListener('click', joinGame);
+            newGameButton.addEventListener('click', () => {
+                // This would be initiated by the bot, but we can hide the modal for now.
+                hideModal();
+            });
+        };
     </script>
 </body>
 </html>
